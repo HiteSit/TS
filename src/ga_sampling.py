@@ -2,7 +2,7 @@ import pandas as pd
 import pygad
 from rdkit import Chem
 
-from baseline import read_input, unpack_input_dict
+from .baseline import read_input, unpack_input_dict
 
 
 class GASampler:

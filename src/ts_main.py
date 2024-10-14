@@ -8,8 +8,8 @@ from timeit import default_timer as timer
 
 import pandas as pd
 
-from thompson_sampling import ThompsonSampler
-from ts_logger import get_logger
+from .thompson_sampling import ThompsonSampler
+from .ts_logger import get_logger
 
 
 def read_input(json_filename: str) -> dict:
@@ -35,7 +35,7 @@ def parse_input_dict(input_data: dict) -> None:
     Parse the input dictionary and add the necessary information
     :param input_data:
     """
-    module = importlib.import_module("evaluators")
+    module = importlib.import_module("src.evaluators")
     evaluator_class_name = input_data["evaluator_class_name"]
     class_ = getattr(module, evaluator_class_name)
     evaluator_arg = input_data["evaluator_arg"]

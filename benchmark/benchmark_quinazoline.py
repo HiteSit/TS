@@ -7,8 +7,8 @@ import sys
 TS_BASE_DIR = ".."
 sys.path.append(TS_BASE_DIR)
 
-from ts_main import run_ts, parse_input_dict
-from baseline import random_baseline
+from src.ts_main import run_ts, parse_input_dict
+from src.baseline import random_baseline
 from tqdm.auto import tqdm
 
 

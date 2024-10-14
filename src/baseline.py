@@ -10,8 +10,8 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from tqdm.auto import tqdm
 
-from ts_main import read_input, parse_input_dict
-from ts_utils import read_reagents
+from .ts_main import read_input, parse_input_dict
+from .ts_utils import read_reagents
 
 
 def keep_largest(items, n):
@@ -138,7 +138,7 @@ def exhaustive_baseline(input_dict, num_to_select=None, num_to_save=100, invert_
 
 def main():
     num_to_select = -1
-    input_dict = read_input("examples/quinazoline_fp_sim.json")
+    input_dict = read_input("../examples/quinazoline_fp_sim.json")
     # exhaustive_baseline(input_dict, num_to_select=num_to_select)
     # enumerate 50K random molecules
     random_baseline(input_dict, num_trials=50000, num_to_save=50000)
