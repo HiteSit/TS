@@ -2,11 +2,14 @@
 
 import importlib
 import json
+import pandas as pd
 import sys
 from datetime import timedelta
 from timeit import default_timer as timer
+from typing import Optional, Union, List, Tuple, Dict
 
 import pandas as pd
+from pandas import DataFrame
 
 from .thompson_sampling import ThompsonSampler
 from .ts_logger import get_logger
@@ -43,7 +46,9 @@ def parse_input_dict(input_data: dict) -> None:
     input_data['evaluator_class'] = evaluator
 
 
-def run_ts(input_dict: dict, hide_progress: bool = False) -> None:
+def run_ts(input_dict: dict, hide_progress: bool = False,
+           inline_log = False,
+           save_output: Optional[bool] = True,) -> pd.DataFrame:
     """
     Perform a Thompson sampling run
     :param hide_progress: hide the progress bar
@@ -56,8 +61,14 @@ def run_ts(input_dict: dict, hide_progress: bool = False) -> None:
     num_warmup_trials = input_dict["num_warmup_trials"]
     result_filename = input_dict.get("results_filename")
     ts_mode = input_dict["ts_mode"]
-    log_filename = input_dict.get("log_filename")
-    logger = get_logger(__name__, filename=log_filename)
+
+    global logger
+    if inline_log == False:
+        log_filename = input_dict.get("log_filename")
+        logger = get_logger(__name__, filename=log_filename)
+    elif inline_log == True:
+        logger = get_logger(__name__)
+
     ts = ThompsonSampler(mode=ts_mode)
     ts.set_hide_progress(hide_progress)
     ts.set_evaluator(evaluator)
@@ -72,14 +83,14 @@ def run_ts(input_dict: dict, hide_progress: bool = False) -> None:
     logger.info(f"{total_evaluations} evaluations | {percent_searched:.3f}% of total")
     # write the results to disk
     out_df = pd.DataFrame(out_list, columns=["score", "SMILES", "Name"])
-    if result_filename is not None:
+    if result_filename is not None and save_output == True:
         out_df.to_csv(result_filename, index=False)
         logger.info(f"Saved results to: {result_filename}")
-    if not hide_progress:
-        if ts_mode == "maximize":
-            print(out_df.sort_values("score", ascending=False).drop_duplicates(subset="SMILES").head(10))
-        else:
-            print(out_df.sort_values("score", ascending=True).drop_duplicates(subset="SMILES").head(10))
+    # if not hide_progress:
+    #     if ts_mode == "maximize":
+    #         print(out_df.sort_values("score", ascending=False).drop_duplicates(subset="SMILES").head(10))
+    #     else:
+    #         print(out_df.sort_values("score", ascending=True).drop_duplicates(subset="SMILES").head(10))
     return out_df
 
 
