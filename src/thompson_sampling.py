@@ -1,9 +1,12 @@
+import os.path
 import random
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import functools
+from pathlib import Path
 import math
 import numpy as np
+import datamol as dm
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from tqdm.auto import tqdm
@@ -102,12 +105,18 @@ class ThompsonSampler:
         """
         self.evaluator = evaluator
 
-    def set_reaction(self, rxn_smarts):
+    def set_reaction(self, rxn_smarts: str):
         """
         Define the reaction
-        :param rxn_smarts: reaction SMARTS
+        :param rxn_smarts: reaction SMARTS/RXN
         """
-        self.reaction = AllChem.ReactionFromSmarts(rxn_smarts)
+        if os.path.exists(rxn_smarts):
+            self.reaction = dm.reactions.rxn_from_block_file(rxn_smarts)
+        else:
+            try:
+                self.reaction = dm.reactions.rxn_from_smarts(rxn_smarts)
+            except ValueError:
+                self.reaction = dm.reactions.rxn_from_block(rxn_smarts)
 
     def evaluate(self, choice_list: List[int]) -> Tuple[str, str, float]:
         """Evaluate a set of reagents
