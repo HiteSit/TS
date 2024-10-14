@@ -2,6 +2,41 @@ from typing import List, Optional
 
 from .reagent import Reagent
 
+def cansmi(smile, isomeric=True, kekule=True):
+    """
+    Generate a canonical SMILES representation of a oemolecule.
+
+    Args:
+        oemol (oechem.OEMol): The oemolecule to generate SMILES for.
+        isomeric (bool): Flag indicating whether to include isomeric information in the SMILES.
+        kekule (bool): Flag indicating whether to kekulize the oemolecule before generating SMILES.
+
+    Returns:
+        str: The canonical SMILES representation of the oemolecule.
+    """
+    from openeye import oechem
+    oemol = oechem.OEMol()
+    oechem.OESmilesToMol(oemol, smile)
+
+    oechem.OEFindRingAtomsAndBonds(oemol)
+    oechem.OEAssignAromaticFlags(oemol, oechem.OEAroModel_OpenEye)
+    smiflag = oechem.OESMILESFlag_Canonical
+    if isomeric:
+        smiflag |= oechem.OESMILESFlag_ISOMERIC
+
+    if kekule:
+        for bond in oemol.GetBonds(oechem.OEIsAromaticBond()):
+            bond.SetIntType(5)
+        oechem.OECanonicalOrderAtoms(oemol)
+        oechem.OECanonicalOrderBonds(oemol)
+        oechem.OEClearAromaticFlags(oemol)
+        oechem.OEKekulize(oemol)
+
+    # Strip Salt
+    oechem.OEDeleteEverythingExceptTheFirstLargestComponent(oemol)
+
+    smile = oechem.OECreateSmiString(oemol, smiflag)
+    return smile
 
 def create_reagents(filename: str, num_to_select: Optional[int] = None) -> List[Reagent]:
     """

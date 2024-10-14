@@ -7,6 +7,8 @@ from pathlib import Path
 import math
 import numpy as np
 import datamol as dm
+import rdkit
+import rdkit.Chem
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from tqdm.auto import tqdm
@@ -15,6 +17,7 @@ from .disallow_tracker import DisallowTracker
 from .reagent import Reagent
 from .ts_logger import get_logger
 from .ts_utils import read_reagents
+from .ts_utils import cansmi
 from .evaluators import DBEvaluator
 
 
@@ -132,9 +135,16 @@ class ThompsonSampler:
         res = np.nan
         product_smiles = "FAIL"
         if prod:
-            prod_mol = prod[0][0]  # RunReactants returns Tuple[Tuple[Mol]]
-            Chem.SanitizeMol(prod_mol)
-            product_smiles = Chem.MolToSmiles(prod_mol)
+            prod_mol = prod[0][0]
+            # Double fixing routine
+            try:
+                Chem.SanitizeMol(prod_mol)
+                product_smiles = Chem.MolToSmiles(prod_mol)
+            except:
+                _ = dm.to_smiles(prod_mol)
+                product_smiles = cansmi(_, isomeric=True, kekule=True)
+                prod_mol = dm.to_mol(product_smiles, sanitize=True)
+
             if isinstance(self.evaluator, DBEvaluator):
                 res = self.evaluator.evaluate(product_name)
                 res = float(res)
