@@ -47,7 +47,7 @@ def parse_input_dict(input_data: dict) -> None:
 
 
 def run_ts(input_dict: dict, hide_progress: bool = False,
-           inline_log = False,
+           inline_log: Optional[bool] = True,
            save_output: Optional[bool] = True,) -> pd.DataFrame:
     """
     Perform a Thompson sampling run
