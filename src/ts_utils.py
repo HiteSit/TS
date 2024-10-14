@@ -2,6 +2,41 @@ from typing import List, Optional
 
 from .reagent import Reagent
 
+from pathlib import Path
+from typing import List, Union, Optional, Dict
+
+
+def construct_json(reag_smiles: List[Path],
+                   reaction: Union[str, Path],
+                   ts_mode: Optional[str] = "maximize",
+                   warmup_trials: Optional[int] = 10,
+                   ts_iterations: Optional[int] = 5000,
+                   evaluator_class: str = "FPEvaluator",
+                   evaluator_args: Dict = None):
+    """
+    Construct a json file for the Thompson Sampling run
+    @param reag_smiles:
+    @param reaction:
+    @param ts_mode:
+    @param warmup_trials:
+    @param ts_iterations:
+    @param evaluator_class:
+    @param evaluator_args:
+    @return:
+    """
+    json_file = {
+        "reagent_file_list": [str(x) for x in reag_smiles],
+        "reaction_smarts": str(reaction),
+        "num_warmup_trials": warmup_trials,
+        "num_ts_iterations": ts_iterations,
+        "evaluator_class_name": evaluator_class,
+        "evaluator_arg": evaluator_args,
+        "ts_mode": ts_mode,
+        "log_filename": "ts_logs.txt"
+    }
+    return json_file
+
+
 def cansmi(smile, isomeric=True, kekule=True):
     """
     Generate a canonical SMILES representation of a oemolecule.
