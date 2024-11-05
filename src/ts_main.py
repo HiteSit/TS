@@ -38,7 +38,7 @@ def parse_input_dict(input_data: dict) -> None:
     Parse the input dictionary and add the necessary information
     :param input_data:
     """
-    module = importlib.import_module("src.evaluators")
+    module = importlib.import_module(".evaluators", package="src")
     evaluator_class_name = input_data["evaluator_class_name"]
     class_ = getattr(module, evaluator_class_name)
     evaluator_arg = input_data["evaluator_arg"]
