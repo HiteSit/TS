@@ -12,6 +12,7 @@ import rdkit.Chem
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from tqdm.auto import tqdm
+from abc import ABC, abstractmethod
 
 from .disallow_tracker import DisallowTracker
 from .reagent import Reagent
@@ -20,7 +21,15 @@ from .ts_utils import read_reagents
 from .ts_utils import cansmi
 from .evaluators import DBEvaluator
 
-
+class BaseReaction(ABC):
+    @abstractmethod
+    def run_reaction(self, reagents: List[Chem.Mol]) -> Tuple[List[Chem.Mol]]:
+        """
+        Execute the reaction on the provided reagents.
+        :param reagents: List of Reagent instances.
+        :return: Tuple of (products as a list of Chem.Mol, product name as a string).
+        """
+        pass
 
 
 class ThompsonSampler:
@@ -108,18 +117,23 @@ class ThompsonSampler:
         """
         self.evaluator = evaluator
 
-    def set_reaction(self, rxn_smarts: str):
+    def set_reaction(self, rxn_input: Union[str, BaseReaction]):
         """
-        Define the reaction
-        :param rxn_smarts: reaction SMARTS/RXN
+        Define the reaction.
+        :param rxn_input: Reaction SMARTS/RXN string or a custom reaction class instance.
         """
-        if os.path.exists(rxn_smarts):
-            self.reaction = dm.reactions.rxn_from_block_file(rxn_smarts)
+        if isinstance(rxn_input, str):
+            if os.path.exists(rxn_input):
+                self.reaction = dm.reactions.rxn_from_block_file(rxn_input)
+            else:
+                try:
+                    self.reaction = dm.reactions.rxn_from_smarts(rxn_input)
+                except ValueError:
+                    self.reaction = dm.reactions.rxn_from_block(rxn_input)
+        elif isinstance(rxn_input, BaseReaction):
+            self.reaction = rxn_input
         else:
-            try:
-                self.reaction = dm.reactions.rxn_from_smarts(rxn_smarts)
-            except ValueError:
-                self.reaction = dm.reactions.rxn_from_block(rxn_smarts)
+            raise TypeError("rxn_input must be either a string or an instance of BaseReaction")
 
     def evaluate(self, choice_list: List[int]) -> Tuple[str, str, float]:
         """Evaluate a set of reagents
@@ -130,8 +144,14 @@ class ThompsonSampler:
         for idx, choice in enumerate(choice_list):
             component_reagent_list = self.reagent_lists[idx]
             selected_reagents.append(component_reagent_list[choice])
-        prod = self.reaction.RunReactants([reagent.mol for reagent in selected_reagents])
-        product_name = "_".join([reagent.reagent_name for reagent in selected_reagents])
+
+        if isinstance(self.reaction, BaseReaction):
+            prod = self.reaction.run_reaction([reagent.mol for reagent in selected_reagents])
+            product_name = "_".join([reagent.reagent_name for reagent in selected_reagents])
+        else:
+            prod = self.reaction.RunReactants([reagent.mol for reagent in selected_reagents])
+            product_name = "_".join([reagent.reagent_name for reagent in selected_reagents])
+
         res = np.nan
         product_smiles = "FAIL"
         if prod:
