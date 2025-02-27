@@ -12,6 +12,30 @@ def construct_json(reag_smiles: List[Path],
                    ts_iterations: Optional[int] = 5000,
                    evaluator_class: str = "FPEvaluator",
                    evaluator_args: Dict = None):
+    """
+    Constructs a JSON-like dictionary for a Thompson Sampling experiment.
+
+    Args:
+        reag_smiles (List[Path]): List of file paths containing SMILES strings for reagents.
+        reaction (Union[str, Path]): Reaction SMARTS or file path to the reaction file.
+        ts_mode (Optional[str]): Mode for Thompson Sampling, either "maximize" or "minimize". Default is "maximize".
+        warmup_trials (Optional[int]): Number of warmup trials before Thompson Sampling. Default is 10.
+        ts_iterations (Optional[int]): Number of Thompson Sampling iterations. Default is 5000.
+        evaluator_class (str): Name of the evaluator class to use.
+            - **FPEvaluator**
+            - **ROCSEvaluator**
+            - **FredEvaluator**
+        evaluator_args (Dict): Arguments for the evaluator class. Default is None.
+            - If "evaluator_class" is **FPEvaluator**
+                - {"query_smiles": "SMILES"}
+            - If "evaluator_class" is **ROCSEvaluator**
+                - {"query_molfile": Path}
+            - If "evaluator_class" is **FredEvaluator**
+                - {"design_unit_file": Path}
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the configuration for the Thompson Sampling experiment.
+    """
 
     from .thompson_sampling import BaseReaction
 
