@@ -76,9 +76,17 @@ class DisallowTracker:
                 ts_locations[np.array(list(disallowed_selections))] = np.NaN
                 # anything that is not nan is still in play so we need to denote
                 # that pairing it with the synthon we will retire is not allowed
-                for synthon_idx in np.argwhere(~np.isnan(ts_locations)).flatten():
-                    retire_mask[cycle_id] = synthon_idx
-                    self._retire_synthon_mask(retire_mask=retire_mask)
+                try:
+                    # Convert to boolean mask first to ensure proper type
+                    valid_indices_mask = ~np.isnan(ts_locations)
+                    valid_indices = np.where(valid_indices_mask)[0]
+                    
+                    for synthon_idx in valid_indices:
+                        retire_mask[cycle_id] = synthon_idx
+                        self._retire_synthon_mask(retire_mask=retire_mask)
+                except Exception as e:
+                    # If there's any issue with this operation, log it and continue
+                    print(f"Warning: Error processing synthon retirement: {str(e)}")
 
     def update(self, selected: list[int | None]) -> None:
         """

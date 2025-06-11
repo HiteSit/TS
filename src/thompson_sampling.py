@@ -232,7 +232,11 @@ class ThompsonSampler:
                     reagent.init_given_prior(prior_mean=prior_mean, prior_std=prior_std)
                 except ValueError:
                     self.logger.info(f"Skipping reagent {reagent.reagent_name} because there were no successful evaluations during warmup")
-                    self._disallow_tracker.retire_one_synthon(i, j)
+                    try:
+                        self._disallow_tracker.retire_one_synthon(i, j)
+                    except (IndexError, TypeError, ValueError) as e:
+                        # If retiring the reagent fails, log it and continue
+                        self.logger.warning(f"Could not retire reagent {reagent.reagent_name} due to error: {str(e)}. Continuing without retiring.")
         self.logger.info(f"Top score found during warmup: {max(warmup_scores):.3f}")
         return warmup_results
 
